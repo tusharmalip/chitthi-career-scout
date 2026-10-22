@@ -1,16 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import type { Job } from "@/types";
-import { listJobs } from "@/services/jobs";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { filterJobs, jobsQueryOptions } from "@/services/jobs";
 import { AppShell } from "@/components/layout/AppShell";
 import { JobCard } from "@/features/jobs/JobCard";
 import { EmptyState } from "@/components/common/Chip";
 import { useAppState } from "@/features/app/AppState";
+import { JobsError } from "@/features/jobs/JobsError";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>): { type: "All" | "Internship" | "Full-time" | "Contract" } => ({ type: search.type === "Internship" || search.type === "Full-time" || search.type === "Contract" ? search.type : "All" }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(jobsQueryOptions),
+  errorComponent: JobsError,
+  notFoundComponent: JobsError,
+  pendingComponent: () => <AppShell title="Today's leads"><div className="h-64 animate-pulse rounded-2xl bg-muted" /></AppShell>,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Feed — Chitthi" },
       { name: "description", content: "Fresh internships and early-career job leads in one clean feed." },
       { property: "og:title", content: "Chitthi — Job leads, delivered" },
@@ -24,14 +32,10 @@ const types = ["All", "Internship", "Full-time", "Contract"] as const;
 
 function Feed() {
   const { search, saved, applications } = useAppState();
-  const [type, setType] = useState<(typeof types)[number]>("All");
-  const [jobs, setJobs] = useState<Job[] | null>(null);
-
-  useEffect(() => {
-    let live = true;
-    listJobs({ query: search, type }).then((j) => live && setJobs(j));
-    return () => { live = false; };
-  }, [search, type]);
+  const { type } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const { data } = useSuspenseQuery(jobsQueryOptions);
+  const jobs = filterJobs(data, { query: search, type });
 
   const aside = (
     <div className="sticky top-24 space-y-4">
@@ -53,10 +57,10 @@ function Feed() {
     <AppShell title="Today's leads" subtitle="Fresh openings gathered for you." aside={aside}>
       <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
         {types.map((t) => (
-          <button key={t} onClick={() => setType(t)}
+          <Button variant="outline" key={t} onClick={() => { void navigate({ search: { type: t } }); }}
             className={cn("shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium transition", t === type ? "border-primary bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground")}>
             {t}
-          </button>
+          </Button>
         ))}
       </div>
       <div className="space-y-4">

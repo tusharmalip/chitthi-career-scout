@@ -2,12 +2,19 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell";
 import { Chip, type ChipTone } from "@/components/common/Chip";
 import { useAppState } from "@/features/app/AppState";
-import { getJob } from "@/services/jobs";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { JobsError } from "@/features/jobs/JobsError";
+import { getJob, jobsQueryOptions } from "@/services/jobs";
 import type { ApplicationStatus } from "@/types";
 
-export const Route = createFileRoute("/tracker")({
+export const Route = createFileRoute("/_authenticated/tracker")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(jobsQueryOptions),
+  errorComponent: JobsError,
+  notFoundComponent: JobsError,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Application tracker — Chitthi" },
       { name: "description", content: "Track every application from applied to offer." },
       { property: "og:title", content: "Application tracker — Chitthi" },
@@ -26,10 +33,11 @@ const columns: { status: ApplicationStatus; tone: ChipTone }[] = [
 const statuses: ApplicationStatus[] = ["Applied", "Interview", "Offer", "Rejected"];
 
 function Tracker() {
-  const { applications, setStatus } = useAppState();
+  const { data: jobs } = useSuspenseQuery(jobsQueryOptions);
+  const { applications, setStatus, loading } = useAppState();
   return (
     <AppShell title="Application tracker" subtitle="Move each application along as you hear back.">
-      <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+      {loading ? <div className="h-64 animate-pulse rounded-2xl bg-muted" /> : <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         {columns.map(({ status, tone }) => {
           const items = applications.filter((a) => a.status === status);
           return (
@@ -41,7 +49,7 @@ function Tracker() {
               <div className="space-y-2">
                 {items.length === 0 && <p className="px-1 py-4 text-center text-sm text-muted-foreground">Empty</p>}
                 {items.map((a) => {
-                  const job = getJob(a.jobId);
+                  const job = jobs.find((job) => job.id === a.jobId) ?? getJob(a.jobId);
                   if (!job) return null;
                   return (
                     <div key={a.jobId} className="rounded-xl border bg-card p-3 shadow-card">
@@ -58,7 +66,7 @@ function Tracker() {
             </section>
           );
         })}
-      </div>
+      </div>}
     </AppShell>
   );
 }

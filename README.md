@@ -27,3 +27,10 @@ npm run dev
 - TypeScript
 - React
 - Tailwind CSS
+
+## Run Chitthi
+
+Install dependencies with `bun install`, then run `bun run dev`. Run tests with `bun run test`.
+The connected Lovable Cloud environment supplies the generated connection configuration; do not commit private keys. Database schema and six sample jobs are included in `drizzle/migrations`.
+
+Email/password accounts require email confirmation before login. Saved leads, applications, and profiles persist per account with owner-only access. Only active jobs are public. The six seeded posts are illustrative, not verified vacancies; their application links open company career pages. Mock jobs appear only if there are zero active database jobs. `listJobs` hydrates the synchronous `getJob` snapshot; callers needing fresh data must await `listJobs` first. Settings switches remain session-only demonstration controls; automated ingestion and notifications are not implemented.

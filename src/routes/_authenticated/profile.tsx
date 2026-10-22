@@ -4,9 +4,11 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Chip, EmptyState } from "@/components/common/Chip";
 import { useAppState } from "@/features/app/AppState";
 
-export const Route = createFileRoute("/profile")({
+export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Profile — Chitthi" },
       { name: "description", content: "Your Chitthi profile, skills and preferences." },
       { property: "og:title", content: "Profile — Chitthi" },
