@@ -1,4 +1,5 @@
 import { Bookmark, BookmarkCheck, MapPin, Briefcase, Send, Share2, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { Job } from "@/types";
 import { Chip } from "@/components/common/Chip";
@@ -31,11 +32,11 @@ export function JobCard({ job }: { job: Job }) {
             <span className="inline-flex items-center gap-1"><Clock className="size-3.5" />{timeAgo(job.postedAt)}</span>
           </div>
         </div>
-        <button onClick={() => { toggleSaved(job.id); toast(isSaved ? "Removed from saved" : "Saved for later"); }}
+        <Button variant="ghost" size="icon" onClick={async () => { if (await toggleSaved(job.id)) toast(isSaved ? "Removed from saved" : "Saved for later"); }}
           aria-label={isSaved ? "Unsave job" : "Save job"}
           className={cn("grid size-10 shrink-0 place-items-center rounded-full border transition", isSaved ? "border-stamp bg-stamp-soft text-stamp" : "text-muted-foreground hover:text-foreground")}>
           {isSaved ? <BookmarkCheck className="size-4.5" /> : <Bookmark className="size-4.5" />}
-        </button>
+        </Button>
       </header>
 
       <p className="mt-4 text-[15px] leading-relaxed text-foreground/85">{job.description}</p>
@@ -47,14 +48,15 @@ export function JobCard({ job }: { job: Job }) {
       </div>
 
       <footer className="mt-5 flex flex-wrap items-center gap-2 border-t pt-4">
-        <button onClick={() => { setStatus(job.id, "Applied"); toast.success(`Marked as applied at ${job.company}`); }} disabled={applied}
-          className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-60">
-          <Send className="size-4" />{applied ? app.status : "Apply"}
-        </button>
-        <button onClick={() => toast("Share link copied (demo)")}
+        <Button asChild className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90">
+          <a href={job.applyUrl} target="_blank" rel="noopener noreferrer" onClick={() => { if (!applied) void setStatus(job.id, 'Applied'); }}>
+            <Send className="size-4" />{applied ? app.status : "Apply"}
+          </a>
+        </Button>
+        <Button variant="outline" onClick={() => toast("Share link copied (demo)")}
           className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground">
           <Share2 className="size-4" />Share
-        </button>
+        </Button>
         <span className="ml-auto text-xs text-muted-foreground">via {job.source}</span>
       </footer>
     </article>

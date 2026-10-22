@@ -4,6 +4,8 @@ import { AuthForm } from "@/features/auth/AuthLayout";
 export const Route = createFileRoute("/signup")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Sign up — Chitthi" },
       { name: "description", content: "Create a Chitthi account and start collecting job leads." },
       { property: "og:title", content: "Sign up — Chitthi" },

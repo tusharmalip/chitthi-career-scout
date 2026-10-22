@@ -1,12 +1,15 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { Switch } from "@/components/ui/switch";
 import { useAppState } from "@/features/app/AppState";
 
-export const Route = createFileRoute("/settings")({
+export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Settings — Chitthi" },
       { name: "description", content: "Notification and feed preferences for Chitthi." },
       { property: "og:title", content: "Settings — Chitthi" },
@@ -24,7 +27,6 @@ const prefs = [
 
 function Settings() {
   const { signOut } = useAppState();
-  const navigate = useNavigate();
   return (
     <AppShell title="Settings" subtitle="Preferences are stored for this session only (demo).">
       <div className="divide-y rounded-2xl border bg-card shadow-card">
@@ -35,10 +37,10 @@ function Settings() {
           </label>
         ))}
       </div>
-      <button onClick={() => { signOut(); navigate({ to: "/login" }); }}
+      <Button variant="outline" onClick={() => { void signOut(); }}
         className="mt-6 rounded-full border border-destructive/40 px-5 py-2 text-sm font-medium text-destructive hover:bg-stamp-soft">
         Log out
-      </button>
+      </Button>
     </AppShell>
   );
 }

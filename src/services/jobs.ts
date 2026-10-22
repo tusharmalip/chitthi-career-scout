@@ -1,18 +1,34 @@
-// Mock job service. Swap the body of these functions for real API calls later;
-// keep the signatures so components don't change.
+// Preserve the public contracts; async listJobs hydrates the synchronous getJob snapshot.
 import type { Job } from "@/types";
 import { mockJobs } from "@/mocks/jobs";
+import { readActiveJobs } from './jobs.functions';
+import { queryOptions } from '@tanstack/react-query';
 
 export interface JobFilters {
   query?: string;
   type?: Job["type"] | "All";
 }
 
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+let activeSnapshot: Job[] = [];
+
+export const jobsQueryOptions = queryOptions({
+  queryKey: ['jobs'],
+  queryFn: () => listJobs(),
+  staleTime: 30_000,
+});
 
 export async function listJobs(filters: JobFilters = {}): Promise<Job[]> {
-  await delay(150);
-  return filterJobs(mockJobs, filters);
+  const rows = await readActiveJobs();
+  activeSnapshot = rows.length ? rows.map((row) => ({
+    id: row.id, company: row.company, companyInitials: row.company_initials,
+    role: row.role, location: row.location, type: row.type as Job['type'], mode: row.mode as Job['mode'],
+    salary: row.salary ?? undefined, description: row.description, skills: row.skills,
+    source: row.source, postedAt: row.posted_at, applyUrl: row.apply_url,
+  })) : mockJobs.map((job, index) => ({ ...job,
+    id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+    applyUrl: ['https://razorpay.com/jobs/', 'https://zerodha.com/careers/', 'https://careers.swiggy.com/', 'https://www.postman.com/company/careers/', 'https://www.freshworks.com/company/careers/', 'https://careers.cred.club/'][index] ?? '',
+  }));
+  return filterJobs(activeSnapshot, filters);
 }
 
 export function filterJobs(jobs: Job[], { query = "", type = "All" }: JobFilters): Job[] {
@@ -25,5 +41,5 @@ export function filterJobs(jobs: Job[], { query = "", type = "All" }: JobFilters
 }
 
 export function getJob(id: string): Job | undefined {
-  return mockJobs.find((j) => j.id === id);
+  return activeSnapshot.find((j) => j.id === id);
 }
